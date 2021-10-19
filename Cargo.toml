@@ -1,0 +1,13 @@
+[package]
+name = "bevy-ws-server"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+bevy = { version = "0.5.0", default-features = false }
+async-net = "1.6.1"
+futures = "0.3.17"
+async-tungstenite = "0.15.0"
+log = "0.4.14"
+crossbeam-channel = "0.5.1"
+async-channel = "1.6.1"
