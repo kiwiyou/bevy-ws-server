@@ -1,7 +1,8 @@
 use async_net::{AsyncToSocketAddrs, TcpListener, TcpStream};
 use async_tungstenite::tungstenite::Message;
 use async_tungstenite::WebSocketStream;
-use bevy::prelude::{Commands, IntoSystem, Plugin, Res, ResMut};
+use bevy::prelude::Component;
+use bevy::prelude::{App, Commands, Plugin, Res, ResMut};
 use bevy::tasks::{IoTaskPool, Task};
 use crossbeam_channel::{Receiver, Sender};
 use futures::{select, FutureExt, SinkExt, StreamExt};
@@ -9,16 +10,12 @@ use futures::{select, FutureExt, SinkExt, StreamExt};
 pub struct WsPlugin;
 
 impl Plugin for WsPlugin {
-    fn build(&self, app: &mut bevy::prelude::AppBuilder) {
-        let task_pool = app
-            .world()
-            .get_resource::<IoTaskPool>()
-            .expect("IoTaskPool not found")
-            .clone();
+    fn build(&self, app: &mut App) {
+        let task_pool = IoTaskPool(app.world.resource::<IoTaskPool>().0.clone());
         let (ws_tx, ws_rx) = crossbeam_channel::unbounded();
         app.insert_resource(WsListener::new(task_pool, ws_tx))
             .insert_resource(WsAcceptQueue { ws_rx })
-            .add_system(accept_ws_from_queue.system());
+            .add_system(accept_ws_from_queue);
     }
 }
 
@@ -73,6 +70,7 @@ impl WsListener {
     }
 }
 
+#[derive(Component)]
 pub struct WsConnection {
     _io: Task<()>,
     sender: async_channel::Sender<Message>,

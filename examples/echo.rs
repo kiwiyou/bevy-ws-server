@@ -1,13 +1,13 @@
-use bevy::prelude::{App, Commands, Entity, IntoSystem, Query, Res};
+use bevy::prelude::{App, Commands, Entity, Query, Res};
 use bevy::MinimalPlugins;
 use bevy_ws_server::{ReceiveError, WsConnection, WsListener, WsPlugin};
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(MinimalPlugins)
         .add_plugin(WsPlugin)
-        .add_startup_system(startup.system())
-        .add_system(receive_message.system())
+        .add_startup_system(startup)
+        .add_system(receive_message)
         .run();
 }
 
