@@ -1,13 +1,13 @@
 [package]
 name = "bevy-ws-server"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.7.0", default-features = false }
+bevy = { version = "0.10.1", default-features = false }
 async-net = "1.6.1"
 futures = "0.3.21"
-async-tungstenite = "0.17.2"
+async-tungstenite = "0.22.2"
 log = "0.4.17"
 crossbeam-channel = "0.5.5"
 async-channel = "1.6.1"

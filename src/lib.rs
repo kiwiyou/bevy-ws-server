@@ -1,9 +1,9 @@
 use async_net::{AsyncToSocketAddrs, TcpListener, TcpStream};
 use async_tungstenite::tungstenite::Message;
 use async_tungstenite::WebSocketStream;
-use bevy::prelude::Component;
-use bevy::prelude::{App, Commands, Plugin, Res, ResMut};
-use bevy::tasks::{IoTaskPool, Task};
+use bevy::prelude::{Component, Resource};
+use bevy::prelude::{App, Commands, Plugin, ResMut};
+use bevy::tasks::{Task, IoTaskPool};
 use crossbeam_channel::{Receiver, Sender};
 use futures::{select, FutureExt, SinkExt, StreamExt};
 
@@ -11,35 +11,35 @@ pub struct WsPlugin;
 
 impl Plugin for WsPlugin {
     fn build(&self, app: &mut App) {
-        let task_pool = IoTaskPool(app.world.resource::<IoTaskPool>().0.clone());
         let (ws_tx, ws_rx) = crossbeam_channel::unbounded();
-        app.insert_resource(WsListener::new(task_pool, ws_tx))
+        app.insert_resource(WsListener::new(ws_tx))
             .insert_resource(WsAcceptQueue { ws_rx })
             .add_system(accept_ws_from_queue);
     }
 }
 
+#[derive(Resource)]
 pub struct WsListener {
-    task_pool: IoTaskPool,
     ws_tx: Sender<WebSocketStream<TcpStream>>,
 }
 
+#[derive(Resource)]
 pub struct WsAcceptQueue {
     ws_rx: Receiver<WebSocketStream<TcpStream>>,
 }
 
 impl WsListener {
-    pub fn new(task_pool: IoTaskPool, ws_tx: Sender<WebSocketStream<TcpStream>>) -> Self {
-        Self { task_pool, ws_tx }
+    pub fn new(ws_tx: Sender<WebSocketStream<TcpStream>>) -> Self {
+        Self { ws_tx }
     }
 
     pub fn listen(&self, bind_to: impl AsyncToSocketAddrs) {
         let listener = futures::executor::block_on(TcpListener::bind(bind_to))
             .expect("cannot bind to the address");
 
-        let task_pool = self.task_pool.clone();
+        let task_pool = IoTaskPool::get();
         let ws_tx = self.ws_tx.clone();
-        let task = self.task_pool.spawn(async move {
+        let task = task_pool.spawn(async move {
             loop {
                 match listener.accept().await {
                     Ok((stream, addr)) => {
@@ -90,14 +90,13 @@ impl WsConnection {
 
 pub fn accept_ws_from_queue(
     mut commands: Commands,
-    pool: Res<IoTaskPool>,
     queue: ResMut<WsAcceptQueue>,
 ) {
     for mut websocket in queue.ws_rx.try_iter() {
         let (message_tx, io_message_rx) = async_channel::unbounded::<Message>();
         let (io_message_tx, message_rx) = async_channel::unbounded::<Message>();
 
-        let io = pool.spawn(async move {
+        let io = IoTaskPool::get().spawn(async move {
             loop {
                 let mut from_channel = io_message_rx.recv().fuse();
                 let mut from_ws = websocket.next().fuse();
@@ -116,7 +115,7 @@ pub fn accept_ws_from_queue(
                 }
             }
         });
-        commands.spawn().insert(WsConnection {
+        commands.spawn(WsConnection {
             _io: io,
             sender: message_tx,
             receiver: message_rx,
