@@ -4,7 +4,7 @@ version = "0.2.1"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.10.1", default-features = false }
+bevy = { version = "0.11", default-features = false }
 async-net = "1.6.1"
 futures = "0.3.21"
 async-tungstenite = "0.22.2"
