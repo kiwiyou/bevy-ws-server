@@ -4,10 +4,10 @@ version = "0.2.1"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.11", default-features = false }
-async-net = "1.6.1"
-futures = "0.3.21"
-async-tungstenite = "0.22.2"
-log = "0.4.17"
-crossbeam-channel = "0.5.5"
-async-channel = "1.6.1"
+bevy = { version = "0.12", default-features = false, features = ["multi-threaded"] }
+async-net = "2.0.0"
+futures = "0.3.29"
+async-tungstenite = "0.23.0"
+log = "0.4.20"
+crossbeam-channel = "0.5.8"
+async-channel = "2.1.0"
