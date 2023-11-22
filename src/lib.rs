@@ -4,7 +4,7 @@ use async_tungstenite::WebSocketStream;
 use bevy::prelude::*;
 use bevy::tasks::{IoTaskPool, Task};
 use crossbeam_channel::{Receiver, Sender};
-use futures::{select, FutureExt, SinkExt, StreamExt};
+use futures::{pin_mut, select, FutureExt, SinkExt, StreamExt};
 
 pub struct WsPlugin;
 
@@ -94,8 +94,11 @@ pub fn accept_ws_from_queue(mut commands: Commands, queue: ResMut<WsAcceptQueue>
 
         let io = IoTaskPool::get().spawn(async move {
             loop {
-                let mut from_channel = io_message_rx.recv().fuse();
-                let mut from_ws = websocket.next().fuse();
+                let from_channel = io_message_rx.recv().fuse();
+                let from_ws = websocket.next().fuse();
+
+                pin_mut!(from_channel, from_ws);
+
                 select! {
                     message = from_channel => if let Ok(message) = message {
                         let _ =  websocket.send(message).await;
