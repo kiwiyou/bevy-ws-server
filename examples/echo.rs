@@ -12,7 +12,9 @@ fn main() {
 }
 
 fn startup(listener: Res<WsListener>) {
-    listener.listen("127.0.0.1:8080");
+    if let Err(e) = listener.listen(([127, 0, 0, 1], 6669), None) {
+        log::error!("error starting WS listener: {e}");
+    };
 }
 
 fn receive_message(mut commands: Commands, connections: Query<(Entity, &WsConnection)>) {
