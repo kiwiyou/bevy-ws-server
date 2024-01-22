@@ -12,8 +12,13 @@ fn main() {
 }
 
 fn startup(listener: Res<WsListener>) {
-    if let Err(e) = listener.listen(([127, 0, 0, 1], 6669), None) {
-        log::error!("error starting WS listener: {e}");
+    match listener.listen(([127, 0, 0, 1], 6669), None) {
+        Ok(host) => {
+            log::info!("Websocket Server listening on {host:?}");
+        }
+        Err(e) =>{
+            log::error!("error starting WS listener: {e}");
+        }
     };
 }
 

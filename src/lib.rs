@@ -97,15 +97,13 @@ impl WsListener {
         Self { ws_tx }
     }
 
-    pub fn listen(&self, bind_to: impl Into<SocketAddr>, tls: Option<TlsAcceptor>) -> Result<()> {
+    pub fn listen(&self, bind_to: impl Into<SocketAddr>, tls: Option<TlsAcceptor>) -> Result<String> {
         let listener = Async::<TcpListener>::bind(bind_to).expect("cannot bind to the address");
 
         let host = match &tls {
             None => format!("ws://{}", listener.get_ref().local_addr().unwrap()),
             Some(_) => format!("wss://{}", listener.get_ref().local_addr().unwrap()),
         };
-
-        log::info!("Listening on {}", host);
 
         let task_pool = IoTaskPool::get();
         let ws_tx = self.ws_tx.clone();
@@ -144,7 +142,7 @@ impl WsListener {
         });
 
         task.detach();
-        Ok(())
+        Ok(host)
     }
 }
 
