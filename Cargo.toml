@@ -1,5 +1,5 @@
 [package]
-name = "bevy-ws-server"
+name = "bevy_ws_server"
 version = "0.2.1"
 edition = "2021"
 
